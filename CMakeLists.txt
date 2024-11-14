@@ -1,0 +1,218 @@
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8) 
+PROJECT(EMG_Delsys)
+
+
+SET(BOOST_MIN_VERSION "1.48.0")
+#SET(CMAKE_CXX_FLAGS "-O3")
+#SET(CMAKE_EXE_LINKER_FLAGS "-O3")
+#SET(CMAKE_SHARED_LINKER_FLAGS "-O3")
+#SET(CMAKE_BUILD_TYPE Debug)
+SET(CMAKE_POSITION_INDEPENDENT_CODE ON) # For Dynamic loading
+SET(CMAKE_VERBOSE_MAKEFILE OFF)
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
+
+SET(SWIG_PYTHON OFF)
+SET(SWIG_JAVA OFF)
+
+
+IF(WIN32)
+	#SET(BOOST_ROOT C:/local/boost_1_64_0)
+	SET(XSD_EXECUTABLE "C:/Program Files (x86)/CodeSynthesis XSD 4.0/")
+	#SET(OPENSIM_HOME "C:/Program Files/OpenSim 3.3")
+	#SET(Boost_DEBUG TRUE)
+	SET(Boost_USE_STATIC_LIBS ON)
+	ADD_DEFINITIONS(-DWIN32)
+	ADD_DEFINITIONS(-DWINDOWS)
+	SET(CMAKE_C_FLAGS "ws2_32.lib")
+	SET(WINLIB ws2_32)
+	SET(WINMM winmm)
+	SET(dir ${CMAKE_CURRENT_SOURCE_DIR}/bin/Win/)
+	SET(EXECUTABLE_OUTPUT_PATH ${dir} CACHE PATH "Build directory" FORCE)
+	SET(LIBRARY_OUTPUT_PATH ${dir} CACHE PATH "Build directory" FORCE)
+	SET(CMAKE_SHARED_LINKER_FLAGS "-Wl,--add-stdcall-alias")
+ENDIF(WIN32)
+IF(UNIX AND NOT APPLE)
+	MESSAGE("Linux")
+	ADD_DEFINITIONS(-DUNIX)
+ENDIF(UNIX  AND NOT APPLE)
+IF(APPLE)
+	MESSAGE("Mac")
+	ADD_DEFINITIONS(-DAPPLE)
+ENDIF(APPLE)
+
+IF(UNIX)
+    IF(CMAKE_COMPILER_IS_GNUCC)
+         SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+    ENDIF(CMAKE_COMPILER_IS_GNUCC)
+	SET(dir ${CMAKE_CURRENT_SOURCE_DIR}/bin/Unix/)
+	SET(EXECUTABLE_OUTPUT_PATH ${dir} CACHE PATH "Build directory" FORCE)
+	SET(LIBRARY_OUTPUT_PATH ${dir} CACHE PATH "Build directory" FORCE)
+	
+	SET(CMAKE_SHARED_LINKER_FLAGS "-Wl,,--add-stdcall-alias,--no-undefined,-allow-multiple-definition") # For Dynamic loading
+	IF(CMAKE_VERSION VERSION_LESS "3.1")
+		IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+			SET(CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
+		ENDIF()
+	ELSE()
+		SET(CMAKE_CXX_STANDARD 11)
+	ENDIF()
+ENDIF(UNIX)
+
+
+
+FIND_PACKAGE(Boost ${BOOST_MIN_VERSION} COMPONENTS timer chrono thread date_time program_options filesystem system unit_test_framework REQUIRED)
+FIND_PACKAGE(XSD REQUIRED)
+FIND_PACKAGE(XERCES REQUIRED)
+
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${XSD_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${XERCES_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(
+	${CMAKE_SOURCE_DIR}/../../lib/Producers
+	${CMAKE_SOURCE_DIR}/../../lib/Producers/FromExtDevice
+	${CMAKE_SOURCE_DIR}/../../lib/Producers/FromFile
+	${CMAKE_SOURCE_DIR}/../../lib/Producers/DevicePlugin
+	${CMAKE_SOURCE_DIR}/../../lib/NMSmodel
+	${CMAKE_SOURCE_DIR}/../../lib/NMSmodel/Tendon
+	${CMAKE_SOURCE_DIR}/../../lib/NMSmodel/Activation
+	${CMAKE_SOURCE_DIR}/../../lib/Curve
+	${CMAKE_SOURCE_DIR}/../../lib/xmlInput
+	${CMAKE_SOURCE_DIR}/../../lib/FileIO
+	${CMAKE_SOURCE_DIR}/../../lib/FileIO/EMGgenerator
+	${CMAKE_SOURCE_DIR}/../../lib/OdeInt
+	${CMAKE_SOURCE_DIR}/../../lib/Calibration
+	${CMAKE_SOURCE_DIR}/../../lib/Calibration/SimAnnealParameters
+	${CMAKE_SOURCE_DIR}/../../lib/Calibration/ObjectiveFunctions
+	${CMAKE_SOURCE_DIR}/../../lib/Calibration/TorqueComputationModes
+	${CMAKE_SOURCE_DIR}/../../lib/Hybrid
+	${CMAKE_SOURCE_DIR}/../../lib/MTUSpline
+	${CMAKE_SOURCE_DIR}/../../lib/ModelEvaluation
+	${CMAKE_SOURCE_DIR}/../../lib/Gui
+	${CMAKE_SOURCE_DIR}/../../lib/Gui/opengl
+	${CMAKE_SOURCE_DIR}/../../lib/MuscleTendonScaling
+	${CMAKE_SOURCE_DIR}/../../lib/Producers/DevicePlugin/PluginHeritanceTemplate
+	${CMAKE_SOURCE_DIR}/../../lib/
+	${CMAKE_SOURCE_DIR}/../../src
+	${CMAKE_SOURCE_DIR}/src
+)
+
+#IF(DEBUG)
+LINK_DIRECTORIES(
+	${CMAKE_SOURCE_DIR}/../../bin/Win/Debug/
+	)
+#MESSAGE("DEBUG")
+#ELSE()
+#LINK_DIRECTORIES(
+#	${CMAKE_SOURCE_DIR}/../../bin/Win/Release/
+#	)
+#	MESSAGE("RELEASE")
+#ENDIF()
+
+IF(SWIG_PYTHON OR SWIG_JAVA)
+	IF(WIN32)
+		SET(SWIG_EXECUTABLE C:/local/swigwin-3.0.12/swig.exe) # for SWIG on windows
+		SET(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/bin/Win/)
+	ENDIF()
+	FIND_PACKAGE(SWIG REQUIRED)
+	INCLUDE(${SWIG_USE_FILE})
+	IF(SWIG_PYTHON)
+		FIND_PACKAGE(PythonLibs REQUIRED)
+		INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
+	ENDIF()
+	
+	IF(SWIG_JAVA)
+		FIND_PACKAGE(JNI REQUIRED)
+		FIND_PACKAGE(Java REQUIRED)
+		FIND_PACKAGE(matlab REQUIRED SIMULINK MEX_COMPILER MX_LIBRARY MAT_LIBRARY ENG_LIBRARY)
+		INCLUDE(UseJava)
+		INCLUDE_DIRECTORIES(${JNI_INCLUDE_DIRS})
+		INCLUDE_DIRECTORIES(${JAVA_INCLUDE_PATH})
+		INCLUDE_DIRECTORIES(${JAVA_INCLUDE_PATH2})
+		INCLUDE_DIRECTORIES(${JAVA_AWT_INCLUDE_PATH})
+	ENDIF()
+	INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+	
+	IF(WIN32)
+		SET(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/bin/Win/)
+		SET(JAR_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/bin/Win/)
+	ENDIF()
+	IF(UNIX)
+		SET(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/bin/Unix/)
+		SET(JAR_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/bin/Unix/)
+	ENDIF()
+
+	SET(CMAKE_SWIG_FLAGS "")
+	
+	SET_SOURCE_FILES_PROPERTIES(${CMAKE_SOURCE_DIR}/src/EMGDelsysSwig.i PROPERTIES CPLUSPLUS ON)
+	SET_SOURCE_FILES_PROPERTIES(${CMAKE_SOURCE_DIR}/src/EMGDelsysSwig.i PROPERTIES SWIG_FLAGS "-includeall")
+	
+	IF(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.7)
+		IF(SWIG_PYTHON)
+			SWIG_ADD_LIBRARY(EMGDelsysPython LANGUAGE python SOURCES ${CMAKE_SOURCE_DIR}/src/EMGDelsysSwig.i 
+				${CMAKE_SOURCE_DIR}/src/EMG_Delsys.cpp)
+		ENDIF()
+		IF(SWIG_JAVA)
+			SET(CMAKE_SWIG_FLAGS -package CEINMSInterfaceJava)
+			SWIG_ADD_LIBRARY(EMGDelsysJava LANGUAGE java SOURCES ${CMAKE_SOURCE_DIR}/src/EMGDelsysSwig.i 
+				${CMAKE_SOURCE_DIR}//src/EMG_Delsys.cpp)
+		ENDIF()
+	ELSE()
+		IF(SWIG_PYTHON)
+			SWIG_ADD_MODULE(EMGDelsysPython python ${CMAKE_SOURCE_DIR}/src/EMGDelsysSwig.i 
+				${CMAKE_SOURCE_DIR}/src/EMG_Delsys.cpp)
+		ENDIF()
+		IF(SWIG_JAVA)
+			SET(CMAKE_SWIG_FLAGS -package CEINMSInterfaceJava)
+			SWIG_ADD_MODULE(EMGDelsysJava java ${CMAKE_SOURCE_DIR}/src/EMGDelsysSwig.i ${CMAKE_SOURCE_DIR}/src/EMG_Delsys.cpp)
+		ENDIF()
+	ENDIF()
+	
+	IF(SWIG_PYTHON) #CAN ONLY WORK IN RELEASE (because is looking for python_d.lib which does not exist)
+		SWIG_LINK_LIBRARIES(EMGDelsysPython 
+			${PYTHON_LIBRARIES}
+			xmlInput
+			emg_preprocessing
+			EmgXml
+			FileIO
+			ComsumerPlugin
+			${Boost_LIBRARIES}
+			XercesC::XercesC
+			${WINLIB}
+			${WINMM}
+		)
+	ENDIF()
+	
+	IF(SWIG_JAVA) #FOR MATLAB SET MATLAB_JAVA environment variables of the computer to the version of the JRE use. http://matlab.izmiran.ru/help/techdoc/matlab_external/ch05mat3.html
+		SWIG_LINK_LIBRARIES(EMGDelsysJava 
+			${JNI_LIBRARIES} 
+			${JAVA_AWT_LIBRARY} 
+			${JAVA_JVM_LIBRARY}
+			xmlInput
+			emg_preprocessing
+			EmgXml
+			FileIO
+			ComsumerPlugin
+			${Boost_LIBRARIES}
+			XercesC::XercesC
+			${WINLIB}
+			${WINMM}
+		)
+		
+		ADD_JAR(EMGDelsys
+			${CMAKE_SWIG_OUTDIR}/EMGDelsys.java
+			${CMAKE_SWIG_OUTDIR}/EMGDelsysSwig.java 
+			${CMAKE_SWIG_OUTDIR}/EMGDelsysSwigJNI.java 
+			${CMAKE_SWIG_OUTDIR}/vectord.java 
+			${CMAKE_SWIG_OUTDIR}/vectordd.java 
+			${CMAKE_SWIG_OUTDIR}/vectorss.java 
+			${CMAKE_SWIG_OUTDIR}/vectors.java
+			${CMAKE_SWIG_OUTDIR}/mapsd.java
+			${CMAKE_SWIG_OUTDIR}/SWIGTYPE_p_std__mapT_std__string_double_t.java
+			${CMAKE_SWIG_OUTDIR}/SWIGTYPE_p_std__setT_std__string_t.java
+			OUTPUT_DIR ${JAR_OUTPUT}
+		)
+	ENDIF()
+	
+ENDIF()
+
+add_subdirectory(src)
