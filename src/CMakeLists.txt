@@ -1,19 +1,19 @@
 ADD_LIBRARY( EMG_Delsys SHARED EMG_Delsys.cpp
 )
 
-
 TARGET_LINK_LIBRARIES( EMG_Delsys
-	xmlInput
-	emg_preprocessing
-	EmgXml
-	FileIO
-	ComsumerPlugin
+	XMLExecutionInterpreter
+	XMLEMGInterpreter
+	PreprocessingEMG
+	FileLogger
+	DynLib
 	${Boost_LIBRARIES}
 	XercesC::XercesC
-	${WINLIB}
-	${WINMM}
+	ws2_32
 )
 
+target_include_directories(EMG_Delsys PUBLIC
+	${PROJECT_SOURCE_DIR}/src)
 
 ADD_EXECUTABLE(testPlugin test.cpp
 )
