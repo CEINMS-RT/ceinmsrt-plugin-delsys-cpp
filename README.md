@@ -1,11 +1,20 @@
+<img src="https://github.com/CEINMS-RT/ceinmsrt-core-cpp/blob/main/CEINMS-RT_V2_ICON.png" width="50%" alt="CEINMS-RT logo">
+
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
+
+CEINMS-RT [installation](https://ceinms-docs.readthedocs.io/en/latest/Installation%20%5BWindows%5D.html) and [use](https://ceinms-docs.readthedocs.io/en/latest/Tutorial%20%5BWindows%5D%5BUbuntu%5D.html).
+Plugin [installation](#Installation) and [compilation](https://ceinms-docs.readthedocs.io/en/latest/Compilation%20%5BWindows%5D.html). How to use a [plugin](#How-to-use-it).
+
 # Delsys Plugin
 
 ## Installation
+
 * Install Delsys SDK (Tested version: 2.6.12) (download package 'EMGWorks': https://delsys.com/support/software/)
 * Make sure you can open the software 'Trigno Control Utility'. If not look at the troubleshooting section at the end of the file. 
 * Compile, generate and build the EMG_Delsys plugin with VS 2019 (Compile it after compiling CEINMS). It can happen that when building the plugin the boost libraries are not found. Check in the Cmake guy that you are using the right Boost_DIR and Boost_INCLUDE_DIR. If not just change those variables with the right path. Then compile, generate and build again. 
- 
+
 ## How to use it
+
 * Plug the Delsys Trigno station into the power source and plug the USB from the station into the computer
 * Open Delsys Trigno Control Utility and turn on the EMG sensor(s)
 * Check if all sensors have a blinking green light and if you see them on from the interface of Trigno Control Utility
